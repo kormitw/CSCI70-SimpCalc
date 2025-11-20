@@ -1,4 +1,2 @@
 scanner
-sample_input_1.txt
-sample_output_scan_1.txt
-scanner_output.txt
+*.txt
