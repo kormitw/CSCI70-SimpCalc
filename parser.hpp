@@ -1,0 +1,19 @@
+void Prg();
+void Blk();
+void Stm();
+void Argfollow();
+void Arg();
+void Iffollow();
+void Exp();
+void Trmfollow();
+void Trm();
+void Facfollow();
+void Fac();
+void Litfollow();
+void Lit();
+void Val();
+void Cnd();
+void Rel();
+
+void EndOfFile();
+void Assign();
