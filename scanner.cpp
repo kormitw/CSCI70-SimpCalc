@@ -38,13 +38,7 @@ void release(string &state, string &token, ofstream &outputFile){ //Function to 
             state = key_identifiers[token];
         }
     }
-    if(state == "Error"){
-        outputFile << token << "\n";
-        outputFile << state << "\n";
-        token.clear();
-        state.clear();
-    }
-    else if (!token.empty()) {
+    if (!token.empty()) {
         line = state + " " + token + "\n";
         cout << line;
         outputFile << line;
@@ -96,7 +90,7 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                     release(state,token,outputFile);
                 }
                 else if(map == "Newline"){
-                    state = "Error";
+                    state = "ERROR: ";
                     token = "Lexical Error: Unterminated string";
                     release(state,token,outputFile);
                 }
@@ -106,7 +100,7 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
             }
             else if(state == "Excl"){ //!
                 if(in_char != '='){
-                    state = "Error";
+                    state = "ERROR";
                     token = "Lexical Error: Illegal character/character sequence";
                     release(state,token,outputFile);
                 }
