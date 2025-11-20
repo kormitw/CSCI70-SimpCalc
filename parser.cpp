@@ -97,29 +97,34 @@ void Stm() {
         // get_next_token();
         parse_error("Semicolon", ";");
         output_file << "Assignment Statement Recognized" << endl;
+        cout << "Assignment Statement Recognized" << endl;
         get_next_token();
     } else if (
         curr_token_type == "Print"
     ) {
         cout << "terminal: PRINT" << endl;
-        cout << "terminal: (" << endl;
         get_next_token();
+        parse_error("LeftParen", "(");
         Arg();
         Argfollow();
-        cout << "terminal: PR)" << endl;
+        parse_error("RightParen", "PR)");
         get_next_token();
         output_file << "Print Statement Recognized" << endl;
+        cout << "Print Statement Recognized" << endl;
+        // get_next_token();
     } else if (
         curr_token_type == "If"
     ) {
         output_file << "If Statement Begins" << endl;
+        cout << "If Statement Begins" << endl;
         cout << "terminal: IF" << endl;
         Cnd();
-        cout << "terminal: :" << endl;
+        // cout << "terminal: :" << endl;
+        // get_next_token();
+        parse_error("Colon", ":");
         get_next_token();
         Blk();
         Iffollow();
-        output_file << "If Statement Ends" << endl;
     }  
 }
 
@@ -244,17 +249,17 @@ void Val() {
         curr_token_type == "Sqrt"
     ) {
         cout << "terminal: SQRT" << endl;
-        cout << "terminal: (" << endl;
         get_next_token();
+        parse_error("LeftParen", "(");
         Exp();
-        cout << "terminal: SQ)" << endl;
+        parse_error("RightParen", "SQ)");
         get_next_token();
     } else if (
         curr_token_type == "LeftParen"
     ) {
         cout << "terminal: (" << endl;
         Exp();
-        cout << "terminal: LP)" << endl;
+        parse_error("RightParen", "LP)");
         get_next_token();
     }
     // Parentheses
@@ -295,6 +300,7 @@ void Rel() {
     ) {
         cout << "terminal: <=" << endl;
     }
+    // TODO: Error
 }
 
 void Iffollow() {
@@ -304,7 +310,10 @@ void Iffollow() {
         curr_token_type == "Endif"
     ) {
         cout << "terminal: ENDIF" << endl;
-        cout << "terminal: ;" << endl;
+        get_next_token();
+        parse_error("Semicolon", ";");
+        output_file << "If Statement Ends" << endl;
+        cout << "If Statement Ends" << endl;
         get_next_token();
     } else if (
         curr_token_type == "Else"
@@ -314,9 +323,12 @@ void Iffollow() {
         Blk();
         cout << "terminal: ENDIF" << endl;
         get_next_token();
-        cout << "terminal: ;" << endl;
         get_next_token();
+        parse_error("Semicolon", ";");
         get_next_token();
+        output_file << "If Statement Ends" << endl;
+        cout << "If Statement Ends" << endl;
+        // get_next_token();
     }
 }
 
@@ -349,7 +361,7 @@ void Argfollow() {
 }
 
 int main() {
-    string input_file_name = "sample_output_scan_2.txt";
+    string input_file_name = "sample_output_scan_9.txt";
     // string input_file_name = "test_input.txt";
     fstream input_file(input_file_name);
     if (input_file.is_open()){
