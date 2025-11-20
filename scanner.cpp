@@ -59,6 +59,9 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
     string token;
     char in_char;
     ofstream outputFile("scanner_output.txt");
+    bool seenDot = false;
+    bool seenExp = false;
+    bool expHasDigits = false;
 
     while (input_file.get(in_char)) {
         map = tokens_dict[(int)in_char];
@@ -71,10 +74,16 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                 if(token == ""){
                     token += "Lexical Error Illegal character/character sequence";
                     state = "Error";
+                    release(state,token,outputFile);
                 }
                 else if (in_char == ' ' || map =="Newline"){
                     release(state,token,outputFile);
                 }
+            }
+            else if(!isalnum(in_char) && token.back() == '.'){
+                state = "Error";
+                token = "Lexical Error: Invalid number format";
+                release(state,token,outputFile);
             }
             else if(map == "String" || state == "String"){ //String
                 if((int)in_char == 34 && state != "String"){
@@ -162,6 +171,9 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                 if(state != "Number"){
                     release(state,token,outputFile);
                     state = "Number";
+                    seenDot = false;
+                    seenExp = false;
+                    expHasDigits = false;
                 }
                 token += in_char;
             }
@@ -286,6 +298,10 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                 state = "Error";
             }
             else if(map != state){ //Release
+                if(state == "Number" && (token.back() == 'e' || token.back() == 'E')){
+                    state = "Error";
+                    token = "Lexical Error: Invalid number format";
+                }
                 release(state,token,outputFile);
                 state = map;
             }
