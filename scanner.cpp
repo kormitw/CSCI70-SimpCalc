@@ -12,7 +12,7 @@ map<int, string> tokens_dict = {
     {10,"Newline"}, // newline
     {47,"Divide"}, // "/"
     {58,"Colon"}, // ":"
-    {61,"Equals"}, // "="
+    {61,"Equal"}, // "="
     {42,"Multiply"}, // "*"
     {45,"Minus"}, // "-"
     {43,"Plus"}, // "+"
@@ -21,7 +21,10 @@ map<int, string> tokens_dict = {
     {59,"Semicolon"}, // ";"
     {44,"Comma"}, // ","
     {34,"String"}, // "
-    {62,"GT"} // ">"
+    {46,"Period"}, // "."
+    {60,"LessThan"}, // "<"
+    {62,"GreaterThan"}, // ">"
+    {33,"Excl"} // "!"
 };
 
 map<string,string> key_identifiers = {
@@ -58,7 +61,16 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
         }
 
         if(state != "Skip"){ //checks for state
-            if(map == "String" || state == "String"){ //String
+            if((map == "Period" && state != "Number") || state == "Error"){
+                if(token == ""){
+                    token += "Lexical Error Illegal character/character sequence";
+                    state = "Error";
+                }
+                else if (in_char == ' ' || map =="Newline"){
+                    release(state,token,outputFile);
+                }
+            }
+            else if(map == "String" || state == "String"){ //String
                 if((int)in_char == 34 && state != "String"){
                     release(state,token,outputFile);
                     state = map;
@@ -70,11 +82,23 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                 }
                 else if(map == "Newline"){
                     state = "ERROR: ";
-                    token = "Newline during string";
+                    token = "Lexical Error: Unterminated string";
                     release(state,token,outputFile);
                 }
                 else{
                     token += in_char;
+                }
+            }
+            else if(state == "Excl"){ //!
+                if(in_char != '='){
+                    state = "ERROR";
+                    token = "Lexical Error: Illegal character/character sequence";
+                    release(state,token,outputFile);
+                }
+                else{
+                    state = "NotEqual";
+                    token = "!=";
+                    release(state,token,outputFile);
                 }
             }
             else if (map == "Divide"){ //Divide
@@ -88,7 +112,36 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                     token += in_char;
                 }
             }
-            else if(isalpha(in_char) || in_char == '_'){ //Identifier
+            else if(state == "Number" && (in_char == '.' || in_char == 'e' || in_char == 'E')){ //decimal
+                if((state == "Number") && (token.back() == '+' || token.back() == '-') && !isdigit(in_char)){ //non-digit directly after + or -
+                    token += in_char;
+                    token.clear();
+                    token += "Lexical Error Invalid number format";
+                    state = "Error";    
+                    release(state,token,outputFile);
+                }
+                else{
+                    token += in_char;
+                }
+            }
+            else if(state == "Number" && (in_char == '+' || in_char == '-')){
+                if((state == "Number") && (token.back() == 'e' || token.back() == 'E') && !isdigit(in_char)){ //non-digit directly after + or -
+                    token += in_char;
+                }
+                else{
+                    release(state,token,outputFile);
+                    state = map;
+                    token += in_char;
+                }
+            }
+            else if(state == "Number" && isalpha(in_char) && (token.back() == 'e' || token.back() == 'E')){ //non-digit after e / E
+                token += in_char;
+                token.clear();
+                token += "Lexical Error Invalid number format";
+                state = "Error";
+                release(state,token,outputFile);
+            }
+            else if((isalpha(in_char) || in_char == '_')){ //Identifier
                 if(state != "Identifier"){
                     release(state,token,outputFile);
                 }
@@ -104,9 +157,6 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                     release(state,token,outputFile);
                     state = "Number";
                 }
-                token += in_char;
-            }
-            else if(state == "Number" && in_char == '.'){ //decimal
                 token += in_char;
             }
             else if(map == "Multiply"){ //Multiply
@@ -129,40 +179,79 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                 state = map;
                 token += in_char;
             }
-            else if(map == "GT"){ //Greater Than
+            else if(map == "GreaterThan"){ //Greater Than
                 if(state != map && state != ""){
                     release(state,token,outputFile);
                 }
                 state = map;
                 token += in_char;
             }
-            else if(map == "Equals"){ //Equals
-                token += in_char;
-                if(state == "Colon"){
-                    state = "Assign";
+            else if(map == "LessThan"){ //Less Than
+                if(state != map && state != ""){
                     release(state,token,outputFile);
                 }
-                if(state == "GT"){
+                state = map;
+                token += in_char;
+            }
+            else if(map == "Equal"){ //Equals
+                if(state == "Colon"){
+                    state = "Assign";
+                    token += in_char;
+                    release(state,token,outputFile);
+                }
+                else if(state == "GreaterThan"){
                     state = "GTEqual";
+                    token += in_char;
+                    release(state,token,outputFile);
+                }
+                else if(state == "LessThan"){
+                    state = "LTEqual";
+                    token += in_char;
                     release(state,token,outputFile);
                 }
                 else{
+                    release(state,token,outputFile);
+                    token += in_char;
                     state = map;
                 }
             }
             else if(map == "Minus"){ //Minus
-                if(state != map && state != ""){
+                if(state != map && (state != "")){
                     release(state,token,outputFile);
+                    state = map;
+                    token += in_char;
                 }
-                state = map;
-                token += in_char;
+                else if(state == "Number"){
+                    token += in_char;
+                }
+                else if(state == "Minus"){
+                    release(state,token,outputFile);
+                    state = map;
+                    token += in_char;
+                }
+                else{
+                    state = map;
+                    token += in_char;
+                }
             }
             else if(map == "Plus"){ //Plus
-                if(state != map && state != ""){
+                if(state != map && (state != "")){
                     release(state,token,outputFile);
+                    state = map;
+                    token += in_char;
                 }
-                state = map;
-                token += in_char;
+                else if(state == "Number"){
+                    token += in_char;
+                }
+                else if(state == "Plus"){
+                    release(state,token,outputFile);
+                    state = map;
+                    token += in_char;
+                }
+                else{
+                    state = map;
+                    token += in_char;
+                }
             }
             else if(map == "LeftParen"){ //LeftParen
                 release(state,token,outputFile);
@@ -184,6 +273,12 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                 state = map;
                 token += in_char;
             }
+            else if((in_char == ' ' || map == "Newline") && state == "Number" && token.back() == '.' ){ //end immediately after decimal
+                token.pop_back();
+                release(state,token,outputFile);
+                token += "Lexical Error Invalid number format";
+                state = "Error";
+            }
             else if(map != state){ //Release
                 release(state,token,outputFile);
                 state = map;
@@ -194,8 +289,8 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
             state = map;
         }
 
-        // cout << "in_char: " << in_char << " ASCII: " << (int)in_char << " Map: " << map;
-        // cout << " State: " << state << endl;
+        cout << "in_char: " << in_char << " ASCII: " << (int)in_char << " Map: " << map;
+        cout << " State: " << state << " Token: " << token << endl;
     }
 
     outputFile << "EndofFile";
