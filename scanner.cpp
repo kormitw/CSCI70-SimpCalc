@@ -38,24 +38,27 @@ void release(string &state, string &token, ofstream &outputFile){ //Function to 
             state = key_identifiers[token];
         }
     }
-    if (!token.empty()) {
+    if(state == "Error"){
+        outputFile << token << "\n";
+        outputFile << state << "\n";
+        token.clear();
+        state.clear();
+    }
+    else if (!token.empty()) {
         line = state + " " + token + "\n";
-        cout << line;
+        //cout << line;
         outputFile << line;
         line.clear();
         token.clear();
         state.clear();
     }
 }
-void gettoken(fstream &input_file){ //Gets the next token from the input
+void gettoken(fstream &input_file, string &outputName){ //Gets the next token from the input
     string state;
     string map;
     string token;
     char in_char;
-    ofstream outputFile("scanner_output.txt");
-    bool seenDot = false;
-    bool seenExp = false;
-    bool expHasDigits = false;
+    ofstream outputFile(outputName);
 
     while (input_file.get(in_char)) {
         map = tokens_dict[(int)in_char];
@@ -68,16 +71,10 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                 if(token == ""){
                     token += "Lexical Error Illegal character/character sequence";
                     state = "Error";
-                    release(state,token,outputFile);
                 }
                 else if (in_char == ' ' || map =="Newline"){
                     release(state,token,outputFile);
                 }
-            }
-            else if(!isalnum(in_char) && token.back() == '.'){
-                state = "Error";
-                token = "Lexical Error: Invalid number format";
-                release(state,token,outputFile);
             }
             else if(map == "String" || state == "String"){ //String
                 if((int)in_char == 34 && state != "String"){
@@ -90,7 +87,7 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                     release(state,token,outputFile);
                 }
                 else if(map == "Newline"){
-                    state = "ERROR: ";
+                    state = "Error";
                     token = "Lexical Error: Unterminated string";
                     release(state,token,outputFile);
                 }
@@ -100,7 +97,7 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
             }
             else if(state == "Excl"){ //!
                 if(in_char != '='){
-                    state = "ERROR";
+                    state = "Error";
                     token = "Lexical Error: Illegal character/character sequence";
                     release(state,token,outputFile);
                 }
@@ -165,9 +162,6 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                 if(state != "Number"){
                     release(state,token,outputFile);
                     state = "Number";
-                    seenDot = false;
-                    seenExp = false;
-                    expHasDigits = false;
                 }
                 token += in_char;
             }
@@ -292,10 +286,6 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
                 state = "Error";
             }
             else if(map != state){ //Release
-                if(state == "Number" && (token.back() == 'e' || token.back() == 'E')){
-                    state = "Error";
-                    token = "Lexical Error: Invalid number format";
-                }
                 release(state,token,outputFile);
                 state = map;
             }
@@ -305,20 +295,29 @@ void gettoken(fstream &input_file){ //Gets the next token from the input
             state = map;
         }
 
-        cout << "in_char: " << in_char << " ASCII: " << (int)in_char << " Map: " << map;
-        cout << " State: " << state << " Token: " << token << endl;
+        // cout << "in_char: " << in_char << " ASCII: " << (int)in_char << " Map: " << map;
+        // cout << " State: " << state << " Token: " << token << endl;
     }
 
+    release(state,token,outputFile);
     outputFile << "EndofFile";
     outputFile.close();
 }
 
 int main(){
-    fstream input_file("sample_input_1.txt");
-    if (input_file.is_open()){
-        gettoken(input_file);
+    int i = 1;
+    cout << "CTRL+C to end" << endl;
+    while(true){
+        string inputName = "sample_input_" + to_string(i) +".txt";
+        string outputName = "sample_output_scan_" + to_string(i) +".txt";
+        fstream input_file(inputName);
+        if (input_file.is_open()){
+            gettoken(input_file,outputName);
+        }
+        // cout << "EndofFile" << endl;
+        input_file.close();
+        i++;
     }
-    cout << "EndofFile" << endl;
-    input_file.close();
+
     return 0;
 }
