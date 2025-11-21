@@ -18,6 +18,8 @@ bool print_p = true;
 bool print_t = print_p;
 bool print_e = print_p;
 ofstream output_file("test_output.txt");
+int open_ifs = 0;
+bool nested_ifs = false;
 
 void get_next_token() {
     curr_token_index++;
@@ -109,12 +111,19 @@ void Stm() {
         Argfollow();
         parse_error("RightParen", "PR)");
         get_next_token();
+        parse_error("Semicolon", ";");
         output_file << "Print Statement Recognized" << endl;
         cout << "Print Statement Recognized" << endl;
         // get_next_token();
     } else if (
         curr_token_type == "If"
     ) {
+        open_ifs++;
+        cout << "open ifs: " << open_ifs << endl;
+        if (open_ifs > 1) {
+            nested_ifs = true;
+            cout << "ON NEST" << endl;
+        }
         output_file << "If Statement Begins" << endl;
         cout << "If Statement Begins" << endl;
         cout << "terminal: IF" << endl;
@@ -124,8 +133,12 @@ void Stm() {
         parse_error("Colon", ":");
         get_next_token();
         Blk();
+        // get_next_token();
         Iffollow();
-    }  
+        get_next_token();
+    } else {
+        output_file << "Parse error: Invalid Statement";
+    }
 }
 
 void Exp() {
@@ -299,13 +312,18 @@ void Rel() {
         curr_token_type == "LTEqual"
     ) {
         cout << "terminal: <=" << endl;
+    } else {
+        output_file << "Parse Error: Missing relational operator";
+        exit(0);
     }
-    // TODO: Error
 }
 
 void Iffollow() {
-    if (print_p) cout << "Iffollow" << endl;
-    get_next_token();
+    if (print_p) cout << "Iffollow " << curr_token_type << endl;
+    if ((open_ifs > 1 && nested_ifs) || !nested_ifs) {
+        cout << "nested_ifs" << endl;
+        get_next_token();
+    }
     if (
         curr_token_type == "Endif"
     ) {
@@ -314,21 +332,28 @@ void Iffollow() {
         parse_error("Semicolon", ";");
         output_file << "If Statement Ends" << endl;
         cout << "If Statement Ends" << endl;
-        get_next_token();
+        // get_next_token();
     } else if (
         curr_token_type == "Else"
     ) {
         cout << "terminal: ELSE" << endl;
         get_next_token();
         Blk();
-        cout << "terminal: ENDIF" << endl;
         get_next_token();
+        parse_error("Endif", "ENDIF");
         get_next_token();
         parse_error("Semicolon", ";");
-        get_next_token();
         output_file << "If Statement Ends" << endl;
         cout << "If Statement Ends" << endl;
-        // get_next_token();
+    } else {
+        output_file << "Parse Error: Incomplete if Statement.";
+        exit(0);
+    }
+    // get_next_token();
+    open_ifs--;
+    if (open_ifs == 0) {
+        nested_ifs = false;
+        cout << "OFF NEST" << endl;
     }
 }
 
@@ -360,8 +385,8 @@ void Argfollow() {
     }
 }
 
-int main() {
-    string input_file_name = "sample_output_scan_9.txt";
+int main(int argc, char *argv[]) {
+    string input_file_name = "sample_output_scan_" + string(argv[1]) + ".txt";
     // string input_file_name = "test_input.txt";
     fstream input_file(input_file_name);
     if (input_file.is_open()){

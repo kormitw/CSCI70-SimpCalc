@@ -23,6 +23,8 @@ of my program.
 
 using namespace std;
 
+static ios_base::Init iostream_initializer;
+
 map<int, string> tokens_dict = {
     {13,"Newline"}, // newline
     {10,"Newline"}, // newline
@@ -324,8 +326,8 @@ int main(){
     int i = 1;
     cout << "CTRL+C to end" << endl;
     while(true){
-        string inputName = "sample_input_" + to_string(i) +".txt";
-        string outputName = "sample_output_scan_" + to_string(i) +".txt";
+        string inputName = "../samples-2/sample_input_" + to_string(i) +".txt";
+        string outputName = "out_" + to_string(i) +".txt";
         fstream input_file(inputName);
         if (input_file.is_open()){
             gettoken(input_file,outputName);
