@@ -16,4 +16,3 @@ void Cnd();
 void Rel();
 
 void EndOfFile();
-void Assign();
